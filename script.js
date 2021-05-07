@@ -35,7 +35,7 @@
     }
 
     const elevator = document.querySelector(
-      `.elevator[data-floor="${findNearestElevatorFloor(floorOrder)}"]`
+      `.elevator[data-floor="${nearestElevatorFloor}"]`
     );
 
     const floor = document.querySelector(
