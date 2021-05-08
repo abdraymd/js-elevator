@@ -127,7 +127,7 @@
     title.classList.add("mb-3");
     title.textContent = text;
     button.classList.add("btn", "btn-primary");
-    button.textContent = "Добавить этаж";
+    button.textContent = "Add floor";
 
     heading.append(title);
     heading.append(button);
