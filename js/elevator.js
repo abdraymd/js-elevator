@@ -12,33 +12,35 @@
     return elevator;
   }
 
-  function findNearestElevatorFloor(floorOrder) {
+  function findNearestElevatorFloor(container, order) {
+    // select all data-floor attributes of elevators in container
     const elevatorsFloorArr = Array.prototype.slice
-      .call(document.querySelectorAll(".elevator"))
+      .call(container.querySelectorAll(".elevator"))
       .map((el) => +el.dataset.floor);
 
     const nearestFloor = elevatorsFloorArr.reduce((prev, curr) => {
-      return Math.abs(curr - floorOrder) < Math.abs(prev - floorOrder)
-        ? curr
-        : prev;
+      return Math.abs(curr - order) < Math.abs(prev - order) ? curr : prev;
     });
 
     return nearestFloor;
   }
 
-  function moveElevator(floorOrder) {
-    const nearestElevatorFloor = findNearestElevatorFloor(floorOrder);
+  function moveElevator(floorContainer, elevatorContainer, floorOrder) {
+    const nearestElevatorFloor = findNearestElevatorFloor(
+      elevatorContainer,
+      floorOrder
+    );
 
     // exit from function if floor order is equal to elevator floor
     if (nearestElevatorFloor === floorOrder) {
       return;
     }
 
-    const elevator = document.querySelector(
+    const elevator = elevatorContainer.querySelector(
       `.elevator[data-floor="${nearestElevatorFloor}"]`
     );
 
-    const floor = document.querySelector(
+    const floor = floorContainer.querySelector(
       `.house__floor[data-order="${floorOrder}"]`
     );
 
@@ -56,24 +58,19 @@
 
   function createFloor(number) {
     const floor = document.createElement("li");
-    const floorButton = document.createElement("button");
+    const button = document.createElement("button");
 
     floor.classList.add("house__floor");
     floor.dataset.order = number;
-    floorButton.classList.add(
-      "house__floor-btn",
-      "btn",
-      "btn-sm",
-      "btn-secondary"
-    );
-    floorButton.textContent = number + 1;
+    button.classList.add("house__floor-btn", "btn", "btn-sm", "btn-secondary");
+    button.textContent = number + 1;
 
-    floorButton.addEventListener("click", () => {
-      moveElevator(number);
-    });
-    floor.append(floorButton);
+    floor.append(button);
 
-    return floor;
+    return {
+      floor,
+      button,
+    };
   }
 
   function createHeading(text) {
@@ -91,28 +88,23 @@
     button.classList.add("btn", "btn-primary");
     button.textContent = "Добавить этаж";
 
-    button.addEventListener("click", () => {
-      const houseFloorList = document.querySelector(".house ul");
-      houseFloorList.prepend(createFloor(houseFloorList.children.length));
-    });
-
     heading.append(title);
     heading.append(button);
 
-    return heading;
+    return {
+      heading,
+      button,
+    };
   }
 
-  function createHouse(floorCount, elevatorCount = 1) {
+  function createHouse(elevatorCount) {
     const house = document.createElement("div");
     const floorList = document.createElement("ul");
     const elevatorGroup = document.createElement("div");
 
     house.classList.add("house");
+    floorList.classList.add("house__floor-list");
     elevatorGroup.classList.add("elevator-group");
-
-    for (let i = 0; i < floorCount; i++) {
-      floorList.prepend(createFloor(i));
-    }
 
     for (let i = 0; i < elevatorCount; i++) {
       elevatorGroup.append(createElevator());
@@ -121,15 +113,41 @@
     house.append(floorList);
     house.append(elevatorGroup);
 
-    return house;
+    return {
+      house,
+      floorList,
+      elevatorGroup,
+    };
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const container = document.getElementById("elevator-app");
-    const heading = createHeading("Elevator");
-    const house = createHouse(5, 2);
+  function createElevatorApp(container, title, floorCount, elevatorCount = 1) {
+    const heading = createHeading(title);
+    const house = createHouse(elevatorCount);
 
-    container.append(heading);
-    container.append(house);
-  });
+    const addEventToFloorButton = (button, order) => {
+      button.addEventListener("click", () => {
+        moveElevator(house.floorList, house.elevatorGroup, order);
+      });
+    };
+
+    heading.button.addEventListener("click", () => {
+      const lastFloorOrder = house.floorList.children.length;
+      const floor = createFloor(lastFloorOrder);
+      addEventToFloorButton(floor.button, lastFloorOrder);
+
+      house.floorList.prepend(floor.floor);
+    });
+
+    for (let i = 0; i < floorCount; i++) {
+      const floor = createFloor(i);
+      addEventToFloorButton(floor.button, i);
+
+      house.floorList.prepend(floor.floor);
+    }
+
+    container.append(heading.heading);
+    container.append(house.house);
+  }
+
+  window.createElevatorApp = createElevatorApp;
 })();

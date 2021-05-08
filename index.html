@@ -11,8 +11,19 @@
       integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l"
       crossorigin="anonymous"
     />
-    <link rel="stylesheet" href="./style.css" />
-    <script defer src="./script.js"></script>
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="stylesheet" href="./css/elevator.css" />
+    <script defer src="./js/elevator.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        createElevatorApp(
+          document.getElementById("elevator-app"),
+          "Elevator",
+          5,
+          2
+        );
+      });
+    </script>
   </head>
   <body>
     <div id="elevator-app" class="container"></div>
