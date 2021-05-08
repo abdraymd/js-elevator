@@ -1,12 +1,29 @@
 (function () {
+  const floorHeight = 100;
+  const elevatorTransition = 500;
+  const elevatorDoorsTransition = 200;
+
   function createElevator() {
     const elevator = document.createElement("div");
+    const leftDoor = document.createElement("div");
+    const rightDoor = document.createElement("div");
+
     elevator.classList.add("elevator");
+    elevator.style.transitionDuration = `${elevatorTransition}ms`;
     elevator.dataset.floor = 0;
+    leftDoor.classList.add("elevator__door", "elevator__door_left");
+    leftDoor.style.transitionDuration = `${elevatorDoorsTransition}ms`;
+    rightDoor.classList.add("elevator__door", "elevator__door_right");
+    rightDoor.style.transitionDuration = `${elevatorDoorsTransition}ms`;
+
+    elevator.append(leftDoor);
+    elevator.append(rightDoor);
 
     // remove elevator_closed class on transform end
-    elevator.addEventListener("transitionend", () => {
-      elevator.classList.toggle("elevator_closed");
+    elevator.addEventListener("transitionend", (e) => {
+      if (e.target === elevator) {
+        elevator.classList.remove("elevator_closed");
+      }
     });
 
     return elevator;
@@ -25,51 +42,75 @@
     return nearestFloor;
   }
 
-  function moveElevator(floorContainer, elevatorContainer, floorOrder) {
+  function changeElevatorPosition(elevator, floorOrder) {
+    return new Promise((resolve) => {
+      // resolve if elevator floor is equal to floor order
+      if (+elevator.dataset.floor === floorOrder) {
+        resolve();
+      } else {
+        // y = floor height * floor order
+        const y = floorHeight * floorOrder;
+
+        elevator.classList.add("elevator_closed");
+        elevator.dataset.floor = floorOrder;
+
+        // wait for the doors to close before transform
+        setTimeout(() => {
+          elevator.style.transform = `translateY(-${y}px)`;
+          resolve();
+        }, elevatorDoorsTransition);
+      }
+    });
+  }
+
+  function moveElevator(elevatorContainer, firstOrder, secondOrder) {
     const nearestElevatorFloor = findNearestElevatorFloor(
       elevatorContainer,
-      floorOrder
+      firstOrder
     );
-
-    // exit from function if floor order is equal to elevator floor
-    if (nearestElevatorFloor === floorOrder) {
-      return;
-    }
 
     const elevator = elevatorContainer.querySelector(
       `.elevator[data-floor="${nearestElevatorFloor}"]`
     );
 
-    const floor = floorContainer.querySelector(
-      `.house__floor[data-order="${floorOrder}"]`
-    );
+    // set delay to 0 if elevator floor is equal to first order
+    // else set to time of first move
+    const delay =
+      +elevator.dataset.floor === firstOrder
+        ? 0
+        : 2 * elevatorDoorsTransition + elevatorTransition;
 
-    // x = floor height * floor order
-    const x = floor.offsetHeight * floorOrder;
-
-    elevator.classList.toggle("elevator_closed");
-    elevator.dataset.floor = floorOrder;
-
-    // wait for the doors to close before transform
-    setTimeout(() => {
-      elevator.style.transform = `translateY(-${x}px)`;
-    }, 200);
+    changeElevatorPosition(elevator, firstOrder).then(() => {
+      setTimeout(() => {
+        changeElevatorPosition(elevator, secondOrder);
+      }, delay);
+    });
   }
 
   function createFloor(number) {
     const floor = document.createElement("li");
-    const button = document.createElement("button");
+    const text = document.createElement("span");
+    const buttonUp = document.createElement("button");
+    const buttonDown = document.createElement("button");
 
-    floor.classList.add("house__floor");
+    floor.classList.add("floor");
+    floor.style.height = `${floorHeight}px`;
     floor.dataset.order = number;
-    button.classList.add("house__floor-btn", "btn", "btn-sm", "btn-secondary");
-    button.textContent = number + 1;
+    text.classList.add("floor__order");
+    text.textContent = `Floor: ${number + 1}`;
+    buttonUp.classList.add("floor__btn", "btn", "btn-sm", "btn-secondary");
+    buttonUp.textContent = "Up";
+    buttonDown.classList.add("floor__btn", "btn", "btn-sm", "btn-secondary");
+    buttonDown.textContent = "Down";
 
-    floor.append(button);
+    floor.append(text);
+    floor.append(buttonUp);
+    floor.append(buttonDown);
 
     return {
       floor,
-      button,
+      buttonUp,
+      buttonDown,
     };
   }
 
@@ -124,23 +165,28 @@
     const heading = createHeading(title);
     const house = createHouse(elevatorCount);
 
-    const addEventToFloorButton = (button, order) => {
+    const addEventToFloorButton = (button, order, direction) => {
       button.addEventListener("click", () => {
-        moveElevator(house.floorList, house.elevatorGroup, order);
+        const secondOrder =
+          direction === "up" ? house.floorList.children.length - 1 : 0;
+
+        moveElevator(house.elevatorGroup, order, secondOrder);
       });
     };
 
     heading.button.addEventListener("click", () => {
-      const lastFloorOrder = house.floorList.children.length;
-      const floor = createFloor(lastFloorOrder);
-      addEventToFloorButton(floor.button, lastFloorOrder);
+      const floorListLength = house.floorList.children.length;
+      const floor = createFloor(floorListLength);
+      addEventToFloorButton(floor.buttonUp, floorListLength, "up");
+      addEventToFloorButton(floor.buttonDown, floorListLength, "down");
 
       house.floorList.prepend(floor.floor);
     });
 
     for (let i = 0; i < floorCount; i++) {
       const floor = createFloor(i);
-      addEventToFloorButton(floor.button, i);
+      addEventToFloorButton(floor.buttonUp, i, "up");
+      addEventToFloorButton(floor.buttonDown, i, "down");
 
       house.floorList.prepend(floor.floor);
     }

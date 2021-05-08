@@ -1,19 +1,34 @@
-.house {
-  position: relative;
+.house * {
+  box-sizing: border-box;
 }
 
-.house__floor {
-  height: 100px;
-  padding-top: 2rem;
-  border-bottom: 2px solid #333;
+.house {
+  position: relative;
 }
 
 .house__floor-list {
   list-style: none;
 }
 
-.house__floor-btn {
+.floor {
+  padding-top: 0.5rem;
+  border-bottom: 2px solid #333;
+}
+
+.floor__order {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.floor__btn {
   min-width: 30px;
+  margin-right: 1rem;
+}
+
+.floor__btn:last-child {
+  margin-right: 0;
 }
 
 .elevator-group {
@@ -33,15 +48,15 @@
   margin-right: 3rem;
   background-color: #ededed;
   border: 2px solid #333;
-  transition: transform 0.5s ease-in-out;
+  transition-property: transform;
+  transition-timing-function: ease-in-out;
 }
 
 .elevator:last-child {
   margin-right: 0;
 }
 
-.elevator:before,
-.elevator:after {
+.elevator__door {
   content: "";
   position: absolute;
   top: 0;
@@ -49,20 +64,19 @@
   display: block;
   width: 50%;
   background-color: #bababa;
-  transition: transform 0.2s;
+  transition-property: transform;
 }
 
-.elevator:before {
+.elevator__door_left {
   left: 0;
   transform: translateX(-100%);
 }
 
-.elevator:after {
+.elevator__door_right {
   right: 0;
   transform: translateX(100%);
 }
 
-.elevator_closed:before,
-.elevator_closed:after {
-  transform: none;
+.elevator_closed .elevator__door {
+  transform: none !important;
 }
